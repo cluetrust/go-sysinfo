@@ -27,6 +27,7 @@ import (
 	_ "github.com/elastic/go-sysinfo/providers/aix"
 	_ "github.com/elastic/go-sysinfo/providers/darwin"
 	_ "github.com/elastic/go-sysinfo/providers/linux"
+	_ "github.com/elastic/go-sysinfo/providers/solaris"
 	_ "github.com/elastic/go-sysinfo/providers/windows"
 )
 
