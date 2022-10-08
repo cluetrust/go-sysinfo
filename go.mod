@@ -5,6 +5,7 @@ go 1.21
 require (
 	github.com/elastic/go-windows v1.0.2
 	github.com/prometheus/procfs v0.15.1
+	github.com/siebenmann/go-kstat v0.0.0-20210513183136-173c9b0a9973
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/sys v0.25.0
 	howett.net/plist v0.0.0-20181124034731-591f970eefbb
