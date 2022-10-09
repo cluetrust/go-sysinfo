@@ -19,12 +19,12 @@ package solaris
 
 import (
 	"testing"
-
+	"fmt"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestArchitecture(t *testing.T) {
 	a, err := Architecture()
 	assert.NoError(t, err)
-	assert.NotEmpty(t, a)
+	assert.Equal(t, a, "i86pc")
 }
