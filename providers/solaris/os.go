@@ -19,76 +19,58 @@ package solaris
 
 import (
 	"fmt"
-	"io/ioutil"
 	"strconv"
 	"strings"
 
-	"howett.net/plist"
-
 	"github.com/elastic/go-sysinfo/types"
-)
-
-const (
-	systemVersionPlist = "/System/Library/CoreServices/SystemVersion.plist"
-
-	plistProductName         = "ProductName"
-	plistProductVersion      = "ProductVersion"
-	plistProductBuildVersion = "ProductBuildVersion"
+	"golang.org/x/sys/unix"
 )
 
 func OperatingSystem() (*types.OSInfo, error) {
-	data, err := ioutil.ReadFile(systemVersionPlist)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read plist file: %w", err)
-	}
-
-	return getOSInfo(data)
+	return getOSInfo()
 }
 
-func getOSInfo(data []byte) (*types.OSInfo, error) {
-	attrs := map[string]string{}
-	if _, err := plist.Unmarshal(data, &attrs); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal plist data: %w", err)
-	}
-
-	productName, found := attrs[plistProductName]
-	if !found {
-		return nil, fmt.Errorf("plist key %v not found", plistProductName)
-	}
-
-	version, found := attrs[plistProductVersion]
-	if !found {
-		return nil, fmt.Errorf("plist key %v not found", plistProductVersion)
-	}
-
-	build, found := attrs[plistProductBuildVersion]
-	if !found {
-		return nil, fmt.Errorf("plist key %v not found", plistProductBuildVersion)
-	}
-
-	var major, minor, patch int
-	for i, v := range strings.SplitN(version, ".", 3) {
-		switch i {
-		case 0:
-			major, _ = strconv.Atoi(v)
-		case 1:
-			minor, _ = strconv.Atoi(v)
-		case 2:
-			patch, _ = strconv.Atoi(v)
-		default:
+func arrayToString(x [257]byte) string {
+	data := make([]byte, 0, len(x))
+	for _, v := range x {
+		if v == 0 {
 			break
 		}
+		data = append(data, byte(v))
 	}
+	return string(data)
+}
+
+func getOSInfo() (*types.OSInfo, error) {
+	var uname unix.Utsname
+	if err := unix.Uname(&uname); err != nil {
+		return nil, fmt.Errorf("os_info: %w", err)
+	}
+
+   // fmt.Println(string(uname.Sysname[:])) => SunOS
+   // fmt.Println(string(uname.Nodename[:])) => hostname
+   // fmt.Println(string(uname.Machine[:])) => architecture (base)
+   release_string := arrayToString(uname.Release)
+   release := strings.Split(release_string, ".")
+   major, err := strconv.ParseInt(release[0], 10, 64)
+   if err != nil {
+		return nil, fmt.Errorf("os_info:major: %w", err)
+   }
+   minor, err := strconv.ParseInt(release[1], 10, 64)
+   if err != nil {
+		return nil, fmt.Errorf("os_info:minor: %w", err)
+   }
+   build := arrayToString(uname.Version)
 
 	return &types.OSInfo{
 		Type:     "solaris",
 		Family:   "illumos",
 		Platform: "smartos",
-		Name:     productName,
-		Version:  version,
-		Major:    major,
-		Minor:    minor,
-		Patch:    patch,
+		Name:     release_string,
+		Version:  release_string,
+		Major:    int(major),
+		Minor:    int(minor),
+		Patch:    0,
 		Build:    build,
 	}, nil
 }
