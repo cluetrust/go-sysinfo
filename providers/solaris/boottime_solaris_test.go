@@ -19,11 +19,14 @@ package solaris
 
 import (
 	"testing"
+	"time"
+	
 	"github.com/stretchr/testify/assert"
 )
 
 func TestBoottime(t *testing.T) {
 	a, err := bootTime()
 	assert.NoError(t, err)
-	assert.False(t, a.IsZero())
+	// check booted after 2k
+	assert.Less(t, time.Unix(971128197, 0), a) 
 }

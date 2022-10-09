@@ -48,6 +48,6 @@ func bootTime() (time.Time, error) {
 	if err != nil {
 		return time.Time{}, err
 	}
-	bootTimeValue = time.Unix(int64(boot.IntVal), 0)
+	bootTimeValue = time.Unix(int64(boot.UintVal), 0)
 	return bootTimeValue, nil
 }

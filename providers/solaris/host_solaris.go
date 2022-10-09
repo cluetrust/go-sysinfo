@@ -174,6 +174,7 @@ func (r *reader) architecture(h *host) {
 
 func (r *reader) bootTime(h *host) {
 	v, err := bootTime()
+	fmt.Println(v)
 	if r.addErr(err) {
 		return
 	}
