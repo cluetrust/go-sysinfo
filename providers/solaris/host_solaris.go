@@ -14,8 +14,15 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+//go:build (amd64 && cgo)
+// +build amd64,cgo
 
 package solaris
+
+// #include <stdlib.h>
+// #include <procfs.h>
+// #include <sys/procfs.h> 
+import "C"
 
 import (
 	"errors"
@@ -24,6 +31,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+	"encoding/binary"
+//	"unsafe"
 
 	"github.com/joeshaw/multierror"
 	"github.com/prometheus/procfs"
@@ -44,6 +53,16 @@ type solarisSystem struct {
 func newSolarisSystem(hostFS string) solarisSystem {
 	mountPoint := filepath.Join(hostFS, procfs.DefaultMountPoint)
 	fs, _ := procfs.NewFS(mountPoint)
+    path := fs.Path("status")
+    fmt.Println(path)
+    
+	file, _ := os.Open(path)
+	defer file.Close()
+	
+	proc_info := C.malloc(C.sizeof_struct_pstatus)
+	defer C.free(proc_info)
+	binary.Read(file, binary.LittleEndian, &proc_info)
+	
 	return solarisSystem{
 		procFS: procFS{FS: fs, mountPoint: mountPoint},
 	}
@@ -162,7 +181,7 @@ func (r *reader) architecture(h *host) {
 }
 
 func (r *reader) bootTime(h *host) {
-	v, err := bootTime(h.procFS.FS)
+	v, err := bootTime()
 	if r.addErr(err) {
 		return
 	}

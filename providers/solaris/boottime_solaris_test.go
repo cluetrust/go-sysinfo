@@ -18,36 +18,12 @@
 package solaris
 
 import (
-	"sync"
-	"time"
-
-	"github.com/siebenmann/go-kstat"
+	"testing"
+	"github.com/stretchr/testify/assert"
 )
 
-var (
-	bootTimeValue time.Time  // Cached boot time.
-	bootTimeLock  sync.Mutex // Lock that guards access to bootTime.
-)
-
-func bootTime() (time.Time, error) {
-	bootTimeLock.Lock()
-	defer bootTimeLock.Unlock()
-
-	if !bootTimeValue.IsZero() {
-		return bootTimeValue, nil
-	}
-
-	tok, err := kstat.Open()
-	if err != nil {
-		return time.Time{}, err
-	}
-	defer tok.Close()
-
-
-	boot,err := tok.GetNamed("unix",0, "system_misc","boot_time")
-	if err != nil {
-		return time.Time{}, err
-	}
-	bootTimeValue = time.Unix(int64(boot.IntVal), 0)
-	return bootTimeValue, nil
+func TestBoottime(t *testing.T) {
+	a, err := bootTime()
+	assert.NoError(t, err)
+	assert.False(t, a.IsZero())
 }
