@@ -20,6 +20,7 @@ package solaris
 import (
 	"testing"
 	"time"
+	
 	"github.com/stretchr/testify/assert"
     "github.com/elastic/go-sysinfo/internal/registry"
     
@@ -38,5 +39,6 @@ func TestHost(t *testing.T) {
     info := host.Info()
 	assert.NotEmpty(t, info)
 	assert.Equal(t, "i86pc", info.Architecture)
-	assert.Greater(t, time.Unix(1665351178, 0), info.BootTime)
+	assert.Less(t, time.Unix(971128197, 0), info.BootTime)
+	assert.NotEmpty(t, info.Hostname)
 }
