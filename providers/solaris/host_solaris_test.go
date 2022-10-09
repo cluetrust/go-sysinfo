@@ -37,8 +37,15 @@ func TestHost(t *testing.T) {
         t.Fatal(err)
     }
     info := host.Info()
-	assert.NotEmpty(t, info)
 	assert.Equal(t, "i86pc", info.Architecture)
 	assert.Less(t, time.Unix(971128197, 0), info.BootTime)
+	assert.Empty(t, info.Containerized)
 	assert.NotEmpty(t, info.Hostname)
+	assert.NotEmpty(t, info.IPs)
+	assert.Equal(t, "5.11", info.KernelVersion)
+	assert.NotEmpty(t, info.MACs)
+	assert.NotEqual(t, "", info.Timezone)
+	assert.NotEqual(t, "", info.UniqueID)
+	assert.NotEmpty(t, info.OS)
+	assert.Equal(t, "solaris", info.OS.Type)
 }
