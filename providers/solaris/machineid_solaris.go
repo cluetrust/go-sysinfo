@@ -41,7 +41,7 @@ func getHostUUID() (string, error) {
 	zoneidC := C.getzoneid()
 	ret := C.getzonenamebyid(zoneidC, &uuid[0], C.ZONENAME_MAX)
 
-	if ret != 0 {
+	if ret == 0 {
 		return "", fmt.Errorf("gethostuuid failed with %v", ret)
 	}
 

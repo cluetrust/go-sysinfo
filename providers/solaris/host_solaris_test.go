@@ -33,7 +33,7 @@ func TestHost(t *testing.T) {
     
 	host, err := solaris.Host()
     if err != nil {
-            t.Fatal(err)
+        t.Fatal(err)
     }
     info := host.Info()
 	assert.NotEmpty(t, info)

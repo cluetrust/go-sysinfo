@@ -14,25 +14,16 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-//go:build (amd64 && cgo)
-// +build amd64,cgo
 
 package solaris
 
-// #include <stdlib.h>
-// #include <procfs.h>
-// #include <sys/procfs.h> 
-import "C"
 
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
-	"encoding/binary"
-//	"unsafe"
 
 	"github.com/joeshaw/multierror"
 	"github.com/prometheus/procfs"
@@ -40,6 +31,8 @@ import (
 	"github.com/elastic/go-sysinfo/internal/registry"
 	"github.com/elastic/go-sysinfo/providers/shared"
 	"github.com/elastic/go-sysinfo/types"
+	
+	"github.com/siebenmann/go-kstat"
 )
 
 func init() {
@@ -53,28 +46,17 @@ type solarisSystem struct {
 func newSolarisSystem(hostFS string) solarisSystem {
 	mountPoint := filepath.Join(hostFS, procfs.DefaultMountPoint)
 	fs, _ := procfs.NewFS(mountPoint)
-    path := fs.Path("status")
-    fmt.Println(path)
-    
-	file, _ := os.Open(path)
-	defer file.Close()
-	
-	proc_info := C.malloc(C.sizeof_struct_pstatus)
-	defer C.free(proc_info)
-	binary.Read(file, binary.LittleEndian, &proc_info)
-	
 	return solarisSystem{
 		procFS: procFS{FS: fs, mountPoint: mountPoint},
 	}
 }
 
+
 func (s solarisSystem) Host() (types.Host, error) {
-	return newHost(s.procFS)
+	return newHost()
 }
 
 type host struct {
-	procFS procFS
-	stat   procfs.Stat
 	info   types.HostInfo
 }
 
@@ -83,16 +65,26 @@ func (h *host) Info() types.HostInfo {
 }
 
 func (h *host) Memory() (*types.HostMemoryInfo, error) {
-	content, err := ioutil.ReadFile(h.procFS.path("meminfo"))
+	var mem types.HostMemoryInfo
+	
+	tok, err := kstat.Open()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get total physical memory: %w", err)
 	}
+	defer tok.Close()
 
-	return parseMemInfo(content)
+	phys,err := tok.GetNamed("unix",0, "system_pages","physmem")
+	if err != nil {
+		return nil, fmt.Errorf("failed to get total physical memory: %w", err)
+	}
+	mem.Total = phys.UintVal
+	
+	return &mem, nil
 }
 
 // NetworkCounters reports data from /proc/net on linux
 func (h *host) NetworkCounters() (*types.NetworkCountersInfo, error) {
+/* 
 	snmpRaw, err := ioutil.ReadFile(h.procFS.path("net/snmp"))
 	if err != nil {
 		return nil, err
@@ -112,9 +104,12 @@ func (h *host) NetworkCounters() (*types.NetworkCountersInfo, error) {
 	}
 
 	return &types.NetworkCountersInfo{SNMP: snmp, Netstat: netstat}, nil
+ */
+ 	return &types.NetworkCountersInfo{}, nil
 }
 
 func (h *host) CPUTime() (types.CPUTimes, error) {
+/* 
 	stat, err := h.procFS.NewStat()
 	if err != nil {
 		return types.CPUTimes{}, err
@@ -130,15 +125,12 @@ func (h *host) CPUTime() (types.CPUTimes, error) {
 		SoftIRQ: time.Duration(stat.CPUTotal.SoftIRQ * float64(time.Second)),
 		Steal:   time.Duration(stat.CPUTotal.Steal * float64(time.Second)),
 	}, nil
+ */
+	return types.CPUTimes{}, nil
 }
 
-func newHost(fs procFS) (*host, error) {
-	stat, err := fs.NewStat()
-	if err != nil {
-		return nil, fmt.Errorf("failed to read proc stat: %w", err)
-	}
-
-	h := &host{stat: stat, procFS: fs}
+func newHost() (*host, error) {
+	h := &host{}	// TODO: fix
 	r := &reader{}
 	r.architecture(h)
 	r.bootTime(h)
