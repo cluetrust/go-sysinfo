@@ -132,11 +132,11 @@ func (p *process) Info() (types.ProcessInfo, error) {
 	}
 
 	p.info = &types.ProcessInfo{
-		Name:      stat.Comm,
-		PID:       p.PID(),
-		PPID:      stat.PPID,
-		CWD:       cwd,
-		Exe:       exe,
+		Name:      stat.Comm, 	// /proc/X/argv (/0 term string)
+		PID:       p.PID(),		// /proc/X/status (pr_pid)
+		PPID:      stat.PPID,	// /proc/X/status (pr_ppid)
+		CWD:       cwd,			// readlink (/proc/X/path/cwd)
+		Exe:       exe,			// 
 		Args:      args,
 		StartTime: bootTime.Add(ticksToDuration(stat.Starttime)),
 	}
