@@ -14,7 +14,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-//go:build (amd64 && cgo)
+//go:build amd64 && cgo
 // +build amd64,cgo
 
 package solaris
@@ -24,7 +24,7 @@ import "C"
 
 import (
 	"fmt"
-//	"unsafe"
+	// "unsafe"
 )
 
 // MachineID returns the Zone UUID also accessible via
@@ -34,8 +34,8 @@ func MachineID() (string, error) {
 
 func getHostUUID() (string, error) {
 	// zoneid_t is an id_t, is an int type
-	
-//	var zoneidC C.zoneid_t
+
+	//	var zoneidC C.zoneid_t
 	var uuid [C.ZONENAME_MAX]C.char
 
 	zoneidC := C.getzoneid()
@@ -44,7 +44,6 @@ func getHostUUID() (string, error) {
 	if ret == 0 {
 		return "", fmt.Errorf("gethostuuid failed with %v", ret)
 	}
-
 
 	return C.GoString(&uuid[0]), nil
 }

@@ -20,23 +20,22 @@ package solaris
 import (
 	"testing"
 	"time"
-	
+
+	"github.com/elastic/go-sysinfo/internal/registry"
 	"github.com/stretchr/testify/assert"
-    "github.com/elastic/go-sysinfo/internal/registry"
-    
 )
 
 var _ registry.HostProvider = solarisSystem{}
 
 func TestHost(t *testing.T) {
-    solaris := newSolarisSystem("")
+	solaris := newSolarisSystem("")
 	assert.NotEmpty(t, solaris)
-    
+
 	host, err := solaris.Host()
-    if err != nil {
-        t.Fatal(err)
-    }
-    info := host.Info()
+	if err != nil {
+		t.Fatal(err)
+	}
+	info := host.Info()
 	assert.Equal(t, "i86pc", info.Architecture)
 	assert.Less(t, time.Unix(971128197, 0), info.BootTime)
 	assert.Empty(t, info.Containerized)

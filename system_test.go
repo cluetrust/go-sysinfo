@@ -72,6 +72,14 @@ var expectedProcessFeatures = map[string]*ProcessFeatures{
 		OpenHandleEnumerator: false,
 		OpenHandleCounter:    false,
 	},
+	"illumos": {
+		ProcessInfo:          true,
+		Environment:          true,
+		OpenHandleEnumerator: true,
+		OpenHandleCounter:    true,
+		Seccomp:              false,
+		Capabilities:         false,
+	},
 	"solaris": {
 		ProcessInfo:          true,
 		Environment:          true,

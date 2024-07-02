@@ -132,11 +132,11 @@ func (p *process) Info() (types.ProcessInfo, error) {
 	}
 
 	p.info = &types.ProcessInfo{
-		Name:      stat.Comm, 	// /proc/X/argv (/0 term string)
-		PID:       p.PID(),		// /proc/X/status (pr_pid)
-		PPID:      stat.PPID,	// /proc/X/status (pr_ppid)
-		CWD:       cwd,			// readlink (/proc/X/path/cwd)
-		Exe:       exe,			// 
+		Name:      stat.Comm, // /proc/X/argv (/0 term string)
+		PID:       p.PID(),   // /proc/X/status (pr_pid)
+		PPID:      stat.PPID, // /proc/X/status (pr_ppid)
+		CWD:       cwd,       // readlink (/proc/X/path/cwd)
+		Exe:       exe,       //
 		Args:      args,
 		StartTime: bootTime.Add(ticksToDuration(stat.Starttime)),
 	}
@@ -243,7 +243,8 @@ func (p *process) User() (types.UserInfo, error) {
 
 	return user, nil
 }
-/* 
+
+/*
 
 // NetworkStats reports network stats for an individual PID.
 func (p *process) NetworkCounters() (*types.NetworkCountersInfo, error) {
@@ -267,7 +268,7 @@ func (p *process) NetworkCounters() (*types.NetworkCountersInfo, error) {
 
 	return &types.NetworkCountersInfo{SNMP: snmp, Netstat: netstat}, nil
 }
- */
+*/
 
 func ticksToDuration(ticks uint64) time.Duration {
 	seconds := float64(ticks) / float64(userHz) * float64(time.Second)

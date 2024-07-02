@@ -14,5 +14,6 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/siebenmann/go-kstat v0.0.0-20210513183136-173c9b0a9973 // indirect
 	gopkg.in/yaml.v3 v3.0.0 // indirect
 )

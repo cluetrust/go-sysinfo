@@ -47,20 +47,20 @@ func getOSInfo() (*types.OSInfo, error) {
 		return nil, fmt.Errorf("os_info: %w", err)
 	}
 
-   // fmt.Println(string(uname.Sysname[:])) => SunOS
-   // fmt.Println(string(uname.Nodename[:])) => hostname
-   // fmt.Println(string(uname.Machine[:])) => architecture (base)
-   release_string := arrayToString(uname.Release)
-   release := strings.Split(release_string, ".")
-   major, err := strconv.ParseInt(release[0], 10, 64)
-   if err != nil {
+	// fmt.Println(string(uname.Sysname[:])) => SunOS
+	// fmt.Println(string(uname.Nodename[:])) => hostname
+	// fmt.Println(string(uname.Machine[:])) => architecture (base)
+	release_string := arrayToString(uname.Release)
+	release := strings.Split(release_string, ".")
+	major, err := strconv.ParseInt(release[0], 10, 64)
+	if err != nil {
 		return nil, fmt.Errorf("os_info:major: %w", err)
-   }
-   minor, err := strconv.ParseInt(release[1], 10, 64)
-   if err != nil {
+	}
+	minor, err := strconv.ParseInt(release[1], 10, 64)
+	if err != nil {
 		return nil, fmt.Errorf("os_info:minor: %w", err)
-   }
-   build := arrayToString(uname.Version)
+	}
+	build := arrayToString(uname.Version)
 
 	return &types.OSInfo{
 		Type:     "solaris",

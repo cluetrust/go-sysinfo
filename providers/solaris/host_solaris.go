@@ -15,23 +15,24 @@
 // specific language governing permissions and limitations
 // under the License.
 
+//go:build solaris
+
 package solaris
 
-
 import (
+        "context"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"time"
 
-	"github.com/joeshaw/multierror"
 	"github.com/prometheus/procfs"
 
 	"github.com/elastic/go-sysinfo/internal/registry"
 	"github.com/elastic/go-sysinfo/providers/shared"
 	"github.com/elastic/go-sysinfo/types"
-	
+
 	"github.com/siebenmann/go-kstat"
 )
 
@@ -51,13 +52,12 @@ func newSolarisSystem(hostFS string) solarisSystem {
 	}
 }
 
-
 func (s solarisSystem) Host() (types.Host, error) {
 	return newHost()
 }
 
 type host struct {
-	info   types.HostInfo
+	info types.HostInfo
 }
 
 func (h *host) Info() types.HostInfo {
@@ -66,71 +66,79 @@ func (h *host) Info() types.HostInfo {
 
 func (h *host) Memory() (*types.HostMemoryInfo, error) {
 	var mem types.HostMemoryInfo
-	
+
 	tok, err := kstat.Open()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get total physical memory: %w", err)
 	}
 	defer tok.Close()
 
-	phys,err := tok.GetNamed("unix",0, "system_pages","physmem")
+	phys, err := tok.GetNamed("unix", 0, "system_pages", "physmem")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get total physical memory: %w", err)
 	}
 	mem.Total = phys.UintVal
-	
+
 	return &mem, nil
 }
 
 // NetworkCounters reports data from /proc/net on linux
 func (h *host) NetworkCounters() (*types.NetworkCountersInfo, error) {
-/* 
-	snmpRaw, err := ioutil.ReadFile(h.procFS.path("net/snmp"))
-	if err != nil {
-		return nil, err
-	}
-	snmp, err := getNetSnmpStats(snmpRaw)
-	if err != nil {
-		return nil, err
-	}
+	/*
+		snmpRaw, err := ioutil.ReadFile(h.procFS.path("net/snmp"))
+		if err != nil {
+			return nil, err
+		}
+		snmp, err := getNetSnmpStats(snmpRaw)
+		if err != nil {
+			return nil, err
+		}
 
-	netstatRaw, err := ioutil.ReadFile(h.procFS.path("net/netstat"))
-	if err != nil {
-		return nil, err
-	}
-	netstat, err := getNetstatStats(netstatRaw)
-	if err != nil {
-		return nil, err
-	}
+		netstatRaw, err := ioutil.ReadFile(h.procFS.path("net/netstat"))
+		if err != nil {
+			return nil, err
+		}
+		netstat, err := getNetstatStats(netstatRaw)
+		if err != nil {
+			return nil, err
+		}
 
-	return &types.NetworkCountersInfo{SNMP: snmp, Netstat: netstat}, nil
- */
- 	return &types.NetworkCountersInfo{}, nil
+		return &types.NetworkCountersInfo{SNMP: snmp, Netstat: netstat}, nil
+	*/
+	return &types.NetworkCountersInfo{}, nil
 }
 
 func (h *host) CPUTime() (types.CPUTimes, error) {
-/* 
-	stat, err := h.procFS.NewStat()
-	if err != nil {
-		return types.CPUTimes{}, err
-	}
+	/*
+		stat, err := h.procFS.NewStat()
+		if err != nil {
+			return types.CPUTimes{}, err
+		}
 
-	return types.CPUTimes{
-		User:    time.Duration(stat.CPUTotal.User * float64(time.Second)),
-		System:  time.Duration(stat.CPUTotal.System * float64(time.Second)),
-		Idle:    time.Duration(stat.CPUTotal.Idle * float64(time.Second)),
-		IOWait:  time.Duration(stat.CPUTotal.Iowait * float64(time.Second)),
-		IRQ:     time.Duration(stat.CPUTotal.IRQ * float64(time.Second)),
-		Nice:    time.Duration(stat.CPUTotal.Nice * float64(time.Second)),
-		SoftIRQ: time.Duration(stat.CPUTotal.SoftIRQ * float64(time.Second)),
-		Steal:   time.Duration(stat.CPUTotal.Steal * float64(time.Second)),
-	}, nil
- */
+		return types.CPUTimes{
+			User:    time.Duration(stat.CPUTotal.User * float64(time.Second)),
+			System:  time.Duration(stat.CPUTotal.System * float64(time.Second)),
+			Idle:    time.Duration(stat.CPUTotal.Idle * float64(time.Second)),
+			IOWait:  time.Duration(stat.CPUTotal.Iowait * float64(time.Second)),
+			IRQ:     time.Duration(stat.CPUTotal.IRQ * float64(time.Second)),
+			Nice:    time.Duration(stat.CPUTotal.Nice * float64(time.Second)),
+			SoftIRQ: time.Duration(stat.CPUTotal.SoftIRQ * float64(time.Second)),
+			Steal:   time.Duration(stat.CPUTotal.Steal * float64(time.Second)),
+		}, nil
+	*/
 	return types.CPUTimes{}, nil
 }
 
+func (h *host) FQDNWithContext(ctx context.Context) (string, error) {
+	return shared.FQDNWithContext(ctx)
+}
+
+func (h *host) FQDN() (string, error) {
+	return h.FQDNWithContext(context.Background())
+}
+
 func newHost() (*host, error) {
-	h := &host{}	// TODO: fix
+	h := &host{} // TODO: fix
 	r := &reader{}
 	r.architecture(h)
 	r.bootTime(h)
@@ -159,7 +167,7 @@ func (r *reader) addErr(err error) bool {
 
 func (r *reader) Err() error {
 	if len(r.errs) > 0 {
-		return &multierror.MultiError{Errors: r.errs}
+		return errors.Join(r.errs...)
 	}
 	return nil
 }
